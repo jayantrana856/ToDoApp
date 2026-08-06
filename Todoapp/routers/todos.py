@@ -40,20 +40,21 @@ def redirect_to_login():
     return redirect_response
 
 ### pages ###
+
 @router.get("/todo-page")
 async def render_todo_page(request: Request, db: db_dependency):
-    try:
-        user = await get_current_user(request.cookies.get('access_token'))
+    print("COOKIE =", request.cookies.get("access_token"))
 
-        if user is None:
-            return redirect_to_login()
+    user = await get_current_user(request.cookies.get("access_token"))
+    print("USER =", user)
 
-        todos = db.query(ToDos).filter(ToDos.owner_id == user.get('id')).all()
+    todos = db.query(ToDos).filter(ToDos.owner_id == user.get("id")).all()
 
-        return templates.TemplateResponse("todo.html", {"request": request, "todos": todos, "user": user})
-
-    except:
-        return redirect_to_login()
+    return templates.TemplateResponse(
+        name="todo.html",
+        request=request,
+        context={"todos": todos, "user": user}
+    )
 
 @router.get("/add-todo-page")
 async def render_todo_page(request: Request):
@@ -63,7 +64,11 @@ async def render_todo_page(request: Request):
         if user is None:
             return redirect_to_login()
 
-        return templates.TemplateResponse("add-todo.html", {"request": request, "user": user})
+        return templates.TemplateResponse(
+            name="add-todo.html",
+            request=request,
+            context={"user": user}
+        )
     except:
         return redirect_to_login()
 
@@ -77,7 +82,11 @@ async def render_edit_todo_page(request: Request, todo_id: int, db:db_dependency
 
         todo = db.query(ToDos).filter(ToDos.id == todo_id).first()
 
-        return templates.TemplateResponse("edit-todo.html", {"request": request, "todo": todo, "user": user})
+        return templates.TemplateResponse(
+            name="edit-todo.html",
+            request=request,
+            context={"todo": todo, "user": user}
+        )
     except:
         return redirect_to_login()
 

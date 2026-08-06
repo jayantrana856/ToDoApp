@@ -16,12 +16,14 @@ Base.metadata.create_all(bind=engine)
 app.mount("/static", StaticFiles(directory="Todoapp/static"), name="static")
 
 @app.get("/")
-def test(request: Request):
-     return RedirectResponse(url = "/todos/todo-page", status_code=status.HTTP_302_FOUND)
-# templates.TemplateResponse("home.html", {"request": request})
+async def test():
+    return RedirectResponse(
+        url="/todos/todo-page",
+        status_code=status.HTTP_302_FOUND
+    )
 
 @app.get("/healthy")
-def health_check():
+async def health_check():
     return {"status": "healthy"}
 
 app.include_router(auth.router)
