@@ -84,6 +84,12 @@ def create_access_token(username: str, user_id: int, role: str, expires_delta: t
 
 async def get_current_user(token: str):
     try:
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+
         if token.startswith("Bearer "):
             token = token.replace("Bearer ", "")
 
