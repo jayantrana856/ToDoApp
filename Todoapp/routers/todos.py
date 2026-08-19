@@ -43,23 +43,41 @@ def redirect_to_login():
 
 @router.get("/todo-page")
 async def render_todo_page(request: Request, db: db_dependency):
-    print("COOKIE =", request.cookies.get("access_token"))
+    try:
+        token = request.cookies.get("access_token")
 
-    user = await get_current_user(request.cookies.get("access_token"))
-    print("USER =", user)
+        if token is None:
+            return redirect_to_login()
 
-    todos = db.query(ToDos).filter(ToDos.owner_id == user.get("id")).all()
+        user = await get_current_user(token)
 
-    return templates.TemplateResponse(
-        name="todo.html",
-        request=request,
-        context={"todos": todos, "user": user}
-    )
+        if user is None:
+            return redirect_to_login()
+
+        todos = db.query(ToDos).filter(
+            ToDos.owner_id == user.get("id")
+        ).all()
+
+        return templates.TemplateResponse(
+            name="todo.html",
+            request=request,
+            context={"todos": todos, "user": user}
+        )
+
+    except Exception as e:
+        print("ERROR =", e)
+        return redirect_to_login()
+
 
 @router.get("/add-todo-page")
-async def render_todo_page(request: Request):
+async def render_add_todo_page(request: Request):
     try:
-        user = await get_current_user(request.cookies.get('access_token'))
+        token = request.cookies.get("access_token")
+
+        if token is None:
+            return redirect_to_login()
+
+        user = await get_current_user(token)
 
         if user is None:
             return redirect_to_login()
@@ -69,25 +87,48 @@ async def render_todo_page(request: Request):
             request=request,
             context={"user": user}
         )
-    except:
+
+    except Exception as e:
+        print("ERROR =", e)
         return redirect_to_login()
 
+
 @router.get("/edit-todo-page/{todo_id}")
-async def render_edit_todo_page(request: Request, todo_id: int, db:db_dependency):
+async def render_edit_todo_page(
+    request: Request,
+    todo_id: int,
+    db: db_dependency
+):
     try:
-        user = await get_current_user(request.cookies.get('access_token'))
+        token = request.cookies.get("access_token")
+
+        if token is None:
+            return redirect_to_login()
+
+        user = await get_current_user(token)
 
         if user is None:
             return redirect_to_login()
 
-        todo = db.query(ToDos).filter(ToDos.id == todo_id).first()
+        todo = db.query(ToDos).filter(
+            ToDos.id == todo_id,
+            ToDos.owner_id == user.get("id")
+        ).first()
+
+        if todo is None:
+            return redirect_to_login()
 
         return templates.TemplateResponse(
             name="edit-todo.html",
             request=request,
-            context={"todo": todo, "user": user}
+            context={
+                "todo": todo,
+                "user": user
+            }
         )
-    except:
+
+    except Exception as e:
+        print("ERROR =", e)
         return redirect_to_login()
 
 
